@@ -1,0 +1,34 @@
+// sanitize.js
+const fs = require("fs");
+const path = "./src/DiscountCalculator.jsx";
+
+if (!fs.existsSync(path)) {
+  console.error("File not found:", path);
+  process.exit(1);
+}
+
+let s = fs.readFileSync(path, "utf8");
+
+// Remove BOM if present
+if (s.charCodeAt(0) === 0xfeff) {
+  console.log("BOM found and removed");
+  s = s.slice(1);
+}
+
+// Find index of first import statement that imports React
+const match = s.match(/\bimport\s+React\b/);
+if (match) {
+  const idx = match.index;
+  if (idx > 0) {
+    console.log("Trimming leading content before first import at index:", idx);
+    s = s.slice(idx);
+  } else {
+    console.log("No leading garbage found.");
+  }
+} else {
+  console.warn("No `import React` found in file. The script will not change content.");
+}
+
+// Write back safe UTF-8 (no BOM)
+fs.writeFileSync(path, s, { encoding: "utf8" });
+console.log("Sanitized file:", path);
